@@ -2,11 +2,16 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   images: {
-    // Allow images served from the local public directory
     localPatterns: [
       {
         pathname: '/uploads/**',
         search: '',
+      },
+    ],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '*.public.blob.vercel-storage.com',
       },
     ],
   },

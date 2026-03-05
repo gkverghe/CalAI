@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile } from 'fs/promises';
-import path from 'path';
+import { put } from '@vercel/blob';
 import { prisma } from '@/lib/prisma';
 import { SINGLE_USER_ID } from '@/lib/constants';
 import { CreateMealRequest } from '@/types';
@@ -9,10 +8,6 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const date = searchParams.get('date') ?? new Date().toISOString().split('T')[0];
 
-  const start = new Date(`${date}T00:00:00.000Z`);
-  const end = new Date(`${date}T23:59:59.999Z`);
-
-  // Adjust for local time by using a broader range
   const localStart = new Date(date + 'T00:00:00');
   const localEnd = new Date(date + 'T23:59:59');
 
@@ -40,15 +35,30 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'category and foodItems are required' }, { status: 400 });
     }
 
+    // Ensure the default user exists
+    await prisma.user.upsert({
+      where: { id: SINGLE_USER_ID },
+      update: {},
+      create: {
+        id: SINGLE_USER_ID,
+        dailyCalGoal: 2000,
+        dailyProteinG: 150,
+        dailyCarbsG: 250,
+        dailyFatG: 65,
+      },
+    });
+
     let photoPath: string | undefined;
 
     if (photoBase64) {
       const base64Data = photoBase64.replace(/^data:image\/\w+;base64,/, '');
       const buffer = Buffer.from(base64Data, 'base64');
-      const filename = `${crypto.randomUUID()}.jpg`;
-      const filepath = path.join(process.cwd(), 'public', 'uploads', filename);
-      await writeFile(filepath, buffer);
-      photoPath = `/uploads/${filename}`;
+      const filename = `meals/${crypto.randomUUID()}.jpg`;
+      const blob = await put(filename, buffer, {
+        access: 'public',
+        contentType: 'image/jpeg',
+      });
+      photoPath = blob.url;
     }
 
     const totalCals = foodItems.reduce((sum, item) => sum + item.calories, 0);
