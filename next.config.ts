@@ -1,7 +1,15 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    // Allow images served from the local public directory
+    localPatterns: [
+      {
+        pathname: '/uploads/**',
+        search: '',
+      },
+    ],
+  },
 };
 
 export default nextConfig;

@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "CalAI Dev Server",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["/tmp/calai-launcher.sh"],
+      "port": 3000
+    }
+  ]
+}
